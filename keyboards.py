@@ -10,16 +10,16 @@ class buttons:  # класс для создания клавиатур разл
         self.message = message
 
     async def start_buttons(self, text):
-        kb0 = types.ReplyKeyboardRemove()
         kb1 = types.InlineKeyboardMarkup(row_width=1)
         but1 = types.InlineKeyboardButton(text='Справка', callback_data='spravka')
         but2 = types.InlineKeyboardButton(text='Добавить покатушку', callback_data='new_race')
         kb1.add(but1, but2)
         try:
-            await self.bot.delete_message(self.message.chat.id, self.message.message_id - 1)
             await self.bot.send_message(self.message.chat.id, text, reply_markup=kb1)
+            await self.bot.delete_message(self.message.chat.id, self.message.message_id)
         except Exception:
-            await self.bot.send_message(self.message.chat.id, text, reply_markup=kb1)
+            pass
+            # await self.bot.send_message(self.message.chat.id, text, reply_markup=kb1)
 
     async def only_race_button(self):
         kb2 = types.InlineKeyboardMarkup(row_width=1)
@@ -44,13 +44,10 @@ class buttons:  # класс для создания клавиатур разл
             await self.bot.send_message(self.message.chat.id, f'Покатушка добавлена. Ты можешь сделать отмену или '
                                                               f'изменить покатушку\n\nПосмотри ее '
                                                               f'<a href="{group_hrev}/{data_base().parse_any(self.message, type="message_id", )}">здесь</a>.', parse_mode='HTML', reply_markup=kb3)
+            # await self.bot.delete_message(self.message.chat.id, self.message.message_id - 2)
             await self.bot.delete_message(self.message.chat.id, self.message.message_id - 1)
             await self.bot.delete_message(self.message.chat.id, self.message.message_id)
         except Exception:
-            # await self.bot.delete_message(self.message.chat.id, self.message.message_id)
-            await self.bot.send_message(self.message.chat.id, f'Покатушка добавлена. Ты можешь сделать отмену или '
-                                                              f'изменить покатушку\n\nПосмотри ее '
-                                                              f'<a href="{group_hrev}/{data_base().parse_any(self.message, type="message_id", )}">здесь</a>.', parse_mode='HTML', reply_markup=kb3)
             await self.bot.delete_message(self.message.chat.id, self.message.message_id)
 
     async def only_pin_button(self):
@@ -69,7 +66,5 @@ class buttons:  # класс для создания клавиатур разл
         but2 = types.InlineKeyboardButton(text='Изменить', callback_data='change_race')
         but3 = types.InlineKeyboardButton(text='Отменить', callback_data='cancel_race')
         kb3.add(but1, but2, but3)
-        try:
-            await self.bot.send_message(self.message.chat.id, text, reply_markup=kb3)
-        except Exception:
-            await self.bot.send_message(self.message.chat.id, text, reply_markup=kb3)
+        await self.bot.send_message(self.message.chat.id, text, reply_markup=kb3)
+

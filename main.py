@@ -34,7 +34,7 @@ async def command_start(message: types.Message):
     await buttons(bot, message).start_buttons(text=f'Привет, {message.from_user.first_name}! Я помогу тебе собрать людей на '
                                                  f'покатушку. Все анонсы публикую в канале {group_id}, '
                                                  f'обязательно подпишись.')
-    await bot.delete_message(message.chat.id, message.message_id)
+    # await bot.delete_message(message.chat.id, message.message_id)
 
 
 @dp.callback_query_handler()
@@ -57,49 +57,44 @@ async def button_message(callback: types.CallbackQuery):
         await bot.edit_message_reply_markup(callback.message.chat.id, callback.message.message_id,
                                             reply_markup=await buttons(bot, callback.message).only_race_button())
     elif callback.data == 'change_race':
+        # try:
+        if data_base().parse_any(callback.message, "pol_id"):
+            try:
+                await bot.delete_message(group_id, data_base().parse_any(callback.message, "pol_id"))
+            except Exception:
+                pass
+        await bot.edit_message_text(f'Ок, ниже текущий текст твоего объявления, пришли мне новый\n\n'
+                                    f'{data_base().parse_any(callback.message, type="message_text")}',
+                                    callback.message.chat.id, callback.message.message_id)
         try:
             await bot.delete_message(callback.message.chat.id, callback.message.message_id + 1)
-            if data_base().parse_any(callback.message, "pol_id"):
-                await bot.delete_message(group_id, data_base().parse_any(callback.message, "pol_id"))
-            await bot.edit_message_text(f'Ок, ниже текущий текст твоего объявления, пришли мне новый\n\n'
-                                        f'{data_base().parse_any(callback.message, type="message_text")}',
-                                        callback.message.chat.id, callback.message.message_id)
-            await Form.message_id.set()
         except Exception:
-            if data_base().parse_any(callback.message, "pol_id"):
-                await bot.delete_message(group_id, data_base().parse_any(callback.message, "pol_id"))
-            await bot.edit_message_text(f'Ок, ниже текущий текст твоего объявления, пришли мне новый\n\n'
-                                        f'{data_base().parse_any(callback.message, type="message_text")}',
-                                        callback.message.chat.id, callback.message.message_id)
-            await Form.message_id.set()
+            pass
+        await Form.message_id.set()
+        # except Exception:
+        #     await Form.message_id.set()
     elif callback.data == 'cancel_race':
+        if data_base().parse_any(callback.message, "pol_id"):
+            try:
+                await bot.delete_message(group_id, data_base().parse_any(callback.message, "pol_id"))
+            except Exception:
+                pass
+        await bot.edit_message_text(f'❗️❕ Покатушка отменена', callback.message.chat.id,
+                                    callback.message.message_id)
+        await bot.edit_message_reply_markup(callback.message.chat.id, callback.message.message_id,
+                                            reply_markup=await buttons(bot, callback.message).only_race_button())
+        await bot.edit_message_text(f'<s>{data_base().parse_any(callback.message, type="message_text")}</s>',
+                                    group_id,
+                                    data_base().parse_any(callback.message, type="message_id"), parse_mode='HTML')
+        await unpin(bot, group_id, data_base().parse_any(callback.message, "message_id"))
+        await bot.send_message(group_id, '❗️❕ Покатушка отменена',
+                               reply_to_message_id=data_base().parse_any(callback.message, type="message_id"))
         try:
             await bot.delete_message(callback.message.chat.id, callback.message.message_id + 1)
-            if data_base().parse_any(callback.message, "pol_id"):
-                await bot.delete_message(group_id, data_base().parse_any(callback.message, "pol_id"))
-            await bot.edit_message_text(f'❗️❕ Покатушка отменена', callback.message.chat.id,
-                                        callback.message.message_id)
-            await bot.edit_message_reply_markup(callback.message.chat.id, callback.message.message_id,
-                                                reply_markup=await buttons(bot, callback.message).only_race_button())
-            await bot.edit_message_text(f'<s>{data_base().parse_any(callback.message, type="message_text")}</s>',
-                                        group_id,
-                                        data_base().parse_any(callback.message, type="message_id"), parse_mode='HTML')
-            await unpin(bot, group_id, data_base().parse_any(callback.message, "message_id"))
-            await bot.send_message(group_id, '❗️❕ Покатушка отменена',
-                                   reply_to_message_id=data_base().parse_any(callback.message, type="message_id"))
         except Exception:
-            if data_base().parse_any(callback.message, "pol_id"):
-                await bot.delete_message(group_id, data_base().parse_any(callback.message, "pol_id"))
-            await bot.edit_message_text(f'❗️❕ Покатушка отменена', callback.message.chat.id,
-                                        callback.message.message_id)
-            await bot.edit_message_reply_markup(callback.message.chat.id, callback.message.message_id,
-                                                reply_markup=await buttons(bot, callback.message).only_race_button())
-            await bot.edit_message_text(f'<s>{data_base().parse_any(callback.message, type="message_text")}</s>',
-                                        group_id,
-                                        data_base().parse_any(callback.message, type="message_id"), parse_mode='HTML')
-            await unpin(bot, group_id, data_base().parse_any(callback.message, "message_id"))
-            await bot.send_message(group_id, '❗️❕ Покатушка отменена',
-                                   reply_to_message_id=data_base().parse_any(callback.message, type="message_id"))
+            pass
+    # except Exception:
+    #         pass
     elif callback.data == 'pin_post':
         try:
             delta = timedelta(minutes=2)
@@ -107,8 +102,7 @@ async def button_message(callback: types.CallbackQuery):
             scheduler.add_job(unpin, 'date',
                               run_date=datetime(td.year, td.month, td.day, td.hour, td.minute, 0),
                               args=[bot, group_id, data_base().parse_any(callback.message, "message_id")],
-                              id=f'unpin{data_base().parse_any(callback.message, "message_id")}')
-            scheduler.start()
+                              id=f'unpin{data_base().parse_any(callback.message, "message_id")}', replace_existing=True)
             await bot.answer_callback_query(callback.id,
                                             f'Покатушка была закреплена в канале на 12 часов.', show_alert=True)
             await bot.delete_message(callback.message.chat.id, callback.message.message_id)
@@ -183,24 +177,21 @@ async def new_message(message: types.Message, state: FSMContext):
                     await posting_timer(bot, message)
                     await state.finish()
                 else:
-                    await bot.delete_message(message.chat.id, message.message_id)
-                    await bot.delete_message(message.chat.id, message.message_id - 1)
                     await buttons(bot, message).start_buttons(text='Ошибка. Неверная дата')
+                    await bot.delete_message(message.chat.id, message.message_id)
+                    await bot.delete_message(message.chat.id, message.message_id - 2)
                     await state.finish()
 
             else:
-                await bot.delete_message(message.chat.id, message.message_id)
-                await bot.delete_message(message.chat.id, message.message_id - 1)
                 await state.finish()
                 await buttons(bot, message).start_buttons(text=f'Привет, {message.from_user.first_name}! Я помогу тебе собрать людей на '
                                                  f'покатушку. Все анонсы публикую в канале {group_id}, '
                                                  f'обязательно подпишись.')
+                # await bot.delete_message(message.chat.id, message.message_id)
+                await bot.delete_message(message.chat.id, message.message_id - 1)
     except Exception:
-        #await bot.delete_message(message.chat.id, message.message_id)
         await state.finish()
-        await buttons(bot, message).start_buttons(text=f'Привет, {message.from_user.first_name}! Я помогу тебе собрать людей на '
-                                                 f'покатушку. Все анонсы публикую в канале {group_id}, '
-                                                 f'обязательно подпишись.')
+        await bot.delete_message(message.chat.id, message.message_id - 1)
 
 
 @dp.message_handler(state=Form.message_id)  # Принимаем состояние
@@ -222,8 +213,13 @@ async def new_message(message: types.Message, state: FSMContext):
                                                               parse_mode='HTML')).message_id
                     data['message_id'] = message_id
                     data_base().find_user(message, message_id)
+                    try:
+                        await bot.delete_message(message.chat.id, message.message_id - 2)
+                    except Exception:
+                        await bot.delete_message(message.chat.id, message.message_id - 1)
                     await buttons(bot, message).only_before_post_button()
                     await buttons(bot, message).only_pin_button()
+
                     pol_id = (await bot.send_poll(group_id, question='Ты участвуешь?', options=['Да', 'Да, но опоздаю',
                                                                                                 'Да, присоединюсь по маршруту',
                                                                                                 'Думаю, напишу позже, Нет',
@@ -245,6 +241,10 @@ async def new_message(message: types.Message, state: FSMContext):
                                                               parse_mode='HTML')).message_id
                     data['message_id'] = message_id
                     data_base().find_user(message, message_id)
+                    try:
+                        await bot.delete_message(message.chat.id, message.message_id - 2)
+                    except Exception:
+                        await bot.delete_message(message.chat.id, message.message_id - 1)
                     await buttons(bot, message).only_before_post_button()
                     pol_id = (await bot.send_poll(group_id, question='Ты участвуешь?', options=['Да', 'Да, но опоздаю',
                                                                                                 'Да, присоединюсь по маршруту',
@@ -266,6 +266,10 @@ async def new_message(message: types.Message, state: FSMContext):
                                                               parse_mode='HTML')).message_id
                     data['message_id'] = message_id
                     data_base().find_user(message, message_id)
+                    try:
+                        await bot.delete_message(message.chat.id, message.message_id - 2)
+                    except Exception:
+                        await bot.delete_message(message.chat.id, message.message_id - 1)
                     await buttons(bot, message).only_before_post_button()
                     pol_id = (await bot.send_poll(group_id, question='Ты участвуешь?', options=['Да', 'Да, но опоздаю',
                                                                                                 'Да, присоединюсь по маршруту',
@@ -276,23 +280,23 @@ async def new_message(message: types.Message, state: FSMContext):
                     await posting_timer(bot, message)
                     await state.finish()
                 else:
-                    await bot.delete_message(message.chat.id, message.message_id)
-                    await bot.delete_message(message.chat.id, message.message_id - 2)
-                    await buttons(bot, message).data_error_button(text='Ошибка. Неверная дата')
-                    await state.finish()
+                    try:
+                        await buttons(bot, message).data_error_button(text='Ошибка. Неверная дата')
+                        await bot.delete_message(message.chat.id, message.message_id)
+                        await bot.delete_message(message.chat.id, message.message_id - 2)
+                        await state.finish()
+                    except Exception:
+                        await bot.delete_message(message.chat.id, message.message_id - 1)
+                        await state.finish()
 
             else:
-                await bot.delete_message(message.chat.id, message.message_id)
                 await state.finish()
                 await buttons(bot, message).start_buttons(text=f'Привет, {message.from_user.first_name}! Я помогу тебе собрать людей на '
                                                  f'покатушку. Все анонсы публикую в канале {group_id}, '
                                                  f'обязательно подпишись.')
+                await bot.delete_message(message.chat.id, message.message_id)
     except Exception:
-        await bot.delete_message(message.chat.id, message.message_id)
         await state.finish()
-        await buttons(bot, message).start_buttons(text=f'Привет, {message.from_user.first_name}! Я помогу тебе собрать людей на '
-                                                 f'покатушку. Все анонсы публикую в канале {group_id}, '
-                                                 f'обязательно подпишись.')
 
 
 @dp.message_handler(content_types='text')  # перехватчик текстовых сообщений
